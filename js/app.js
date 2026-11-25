@@ -218,14 +218,14 @@ function renderChrome() {
             A+
           </button>
           <button type="button" class="header-pill" data-action="open-lang-sheet">
-            🌐 ${escapeHtml(langObj.native)}
+            🌐 <span class="lang-label-text">${escapeHtml(langObj.native)}</span>
           </button>
           <button type="button" class="header-pill" data-action="open-signin-sheet">
-            🔑 ${savedCount > 0 ? 'My Saved Plan' : 'Sign In'}
+            🔑 <span>${savedCount > 0 ? 'Saved' : 'Sign In'}</span>
           </button>
           ${
             state.mode === 'landing'
-              ? `<button type="button" class="btn btn-primary btn-sm" data-action="start-onboarding">Build Plan →</button>`
+              ? `<button type="button" class="btn btn-primary btn-sm hide-on-mobile" data-action="start-onboarding">Build Plan →</button>`
               : ''
           }
         </div>
@@ -271,14 +271,14 @@ function renderChrome() {
         <div class="header-actions">
           <button type="button" class="header-pill profile-trigger-pill" data-action="open-account-sheet">
             <span>${phaseObj.icon}</span>
-            <span>${escapeHtml(profile.name)}</span>
+            <span class="profile-trigger-name">${escapeHtml(profile.name)}</span>
             <span style="opacity:0.65;">▾</span>
           </button>
           <button type="button" class="header-pill ${state.prefs.largeText ? 'active-toggle' : ''}" data-action="toggle-large-text" title="Larger text">
             A+
           </button>
           <button type="button" class="header-pill" data-action="open-lang-sheet">
-            🌐 ${escapeHtml(langObj.native)}
+            🌐 <span class="lang-label-text">${escapeHtml(langObj.native)}</span>
           </button>
         </div>
       </div>

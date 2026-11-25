@@ -244,7 +244,7 @@ function renderChrome() {
 
     header.innerHTML = `
       <div class="container header-row">
-        <button type="button" class="brand-btn" data-action="go-landing" title="Back to Home Story">
+        <button type="button" class="brand-btn dashboard-mode-brand" data-action="go-landing" title="Back to Home Story">
           <div class="brand-logo" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3c-3 4-7 6.5-7 11a7 7 0 0 0 14 0c0-4.5-4-7-7-11z"/></svg>
           </div>

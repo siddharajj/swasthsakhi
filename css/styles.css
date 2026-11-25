@@ -209,6 +209,12 @@ body > .skiptranslate,
   }
 }
 
+@media (max-width: 430px) {
+  .dashboard-mode-brand .brand-title {
+    display: none;
+  }
+}
+
 /* Desktop Workspace Tabs */
 .desktop-nav {
   display: none;

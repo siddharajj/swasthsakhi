@@ -1,0 +1,18 @@
+{
+  "name": "SwasthSakhi — Women's Health & Screening Plan",
+  "short_name": "SwasthSakhi",
+  "description": "Personalised life-stage preventive health screening plan, India lab access guide, non-medical report literacy analyser, and women's health stats awareness hub.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFBF8",
+  "theme_color": "#9D174D",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

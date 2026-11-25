@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" translate="yes" data-font="normal">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#9D174D" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="SwasthSakhi" />
+  <title>SwasthSakhi • Women's Health Screening, Care Plan &amp; Awareness (India)</title>
+  <meta name="description" content="Personalised life-stage health check &amp; screening plan for women in India, from teenage to post-menopause, with lab access tiers, non-medical report literacy analyser, and NFHS-5 awareness stats." />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <!-- Google Translate Web Bridge for full-content translation into all 22 Constitutional Indian Languages -->
+  <script>
+    function googleTranslateElementInit() {
+      if (window.google && window.google.translate) {
+        new window.google.translate.TranslateElement(
+          {
+            pageLanguage: 'en',
+            includedLanguages: 'en,hi,bn,te,mr,ta,ur,gu,kn,or,ml,pa,as,mai,ne,sd,kok,doi,mni,sat,ks,sa',
+            autoDisplay: false
+          },
+          'google_translate_element'
+        );
+      }
+    }
+  </script>
+  <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+</head>
+<body>
+  <div id="google_translate_element" class="sr-only-translate" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <!-- Responsive Sticky Header (Desktop Top Nav + Mobile Compact Bar) -->
+    <header class="app-header" id="app-header"></header>
+
+    <!-- Non-Medical Wellness Companion Safety Strip -->
+    <div class="safety-strip-wrap">
+      <div class="container safety-strip" id="safety-strip"></div>
+    </div>
+
+    <!-- Main Responsive Workspace (Desktop Multi-Column, Tablet Fluid, Mobile Single-Column) -->
+    <main class="container app-viewport" id="app-viewport" tabindex="-1"></main>
+
+    <!-- Desktop / Tablet Footer -->
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div><strong>SwasthSakhi</strong> — Personalised Women’s Preventive Health &amp; Screening Companion for India. 100% private on your device.</div>
+        <div>Educational health literacy informed by FOGSI, ICMR, NP-NCD &amp; IMS frameworks — always consult a qualified Gynecologist or Physician for medical advice.</div>
+      </div>
+    </footer>
+
+    <!-- Mobile-Only Bottom Navigation Bar (<768px) -->
+    <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile Primary Navigation"></nav>
+
+    <!-- Adaptive Modal (Centered Dialog on Desktop/Tablet, Slide-up Sheet on Phone) -->
+    <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+
+    <!-- Toast Feedback -->
+    <div class="toast" id="app-toast" role="status" aria-live="polite" hidden></div>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

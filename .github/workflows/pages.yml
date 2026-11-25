@@ -29,7 +29,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html manifest.webmanifest sw.js icon.svg .nojekyll _site/
-          cp -r css js _site/
+          cp -r css js assets _site/
 
       - name: Upload static site artifact
         uses: actions/upload-pages-artifact@v3

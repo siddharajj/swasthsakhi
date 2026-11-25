@@ -1,4 +1,5 @@
-// SwasthSakhi — Responsive Desktop, Tablet & Mobile PWA Controller
+// SwasthSakhi — User Journey Controller
+// Stage 1: Data & Story Hook Landing Page -> Stage 2: Guided 3-Step Profile Wizard (or Demo Mode) -> Stage 3: Clean Health Care Dashboard
 import {
   LIFE_PHASES,
   TESTS_MASTER,
@@ -9,19 +10,29 @@ import { SHAREABLE_CARDS } from './statsData.js';
 import { parseLabReportText, analyzeReportValues } from './analyzerEngine.js';
 import { INDIAN_LANGUAGES, tUI, applyLanguagePreference } from './i18n.js';
 import {
-  loadActiveVault,
+  loadUserVaultOrNull,
+  createDemoSessionVault,
   saveVault,
   loadUIPrefs,
   saveUIPrefs,
   generateThreeWordKey,
-  registerOrSwitchVault,
+  suggestPhaseForAge,
+  createPersonalVaultFromOnboarding,
+  signInExistingVault,
+  upgradeVaultWithSakhiKey,
+  clearActiveSessionToLanding,
   listSavedVaultSummaries
 } from './vault.js';
 import {
+  renderLandingPageView,
+  renderOnboardingWizardView
+} from './viewsLandingOnboarding.js';
+import {
   escapeHtml,
-  renderCarePlanView,
+  renderCareDashboardView,
   renderChecklistTimelineView,
-  renderFamilyAndVaultView,
+  renderAccountAndProfilesSheet,
+  renderSignInSheet,
   renderProfileEditorSheet
 } from './viewsPlan.js';
 import {
@@ -29,51 +40,64 @@ import {
   renderStatsAwarenessView
 } from './viewsAnalyzerStats.js';
 
+const existingUserVault = loadUserVaultOrNull();
+
 const state = {
-  vault: loadActiveVault(),
+  // New visitors ALWAYS start on 'landing' (the Data & Story Hook page!)
+  mode: existingUserVault ? 'dashboard' : 'landing', // 'landing' | 'onboarding' | 'dashboard'
+  vault: existingUserVault || null,
   prefs: loadUIPrefs(),
-  activeTab: 'plan', // 'plan' | 'checklist' | 'analyzer' | 'stats' | 'profiles'
+  activeTab: 'plan', // 'plan' (Dashboard) | 'checklist' (Timeline) | 'analyzer' (Lab Check) | 'stats' (Awareness Data)
+  dashBatchTab: 'morning_fasting_home',
+  openRedFlagIdx: 0,
   checklistFilter: 'all',
-  checklistMode: 'checklist',
-  expandedTestId: null,
-  redFlagsCollapsed: false,
+  checklistMode: 'timeline',
   hideBioInputs: false,
   loadedReportId: null,
-  draftLabValues: null
+  draftLabValues: null,
+  wizard: {
+    step: 1,
+    relation: 'Self',
+    name: '',
+    age: 34,
+    phase: 'pre_menopausal',
+    conditions: [],
+    heightCm: '',
+    weightKg: '',
+    threeWordCode: ''
+  }
 };
 
 function getActiveProfile() {
-  const found = state.vault.profiles.find((p) => p.id === state.vault.activeProfileId);
-  return found || state.vault.profiles[0];
+  if (!state.vault || !state.vault.profiles || !state.vault.profiles.length) return null;
+  return (
+    state.vault.profiles.find((p) => p.id === state.vault.activeProfileId) ||
+    state.vault.profiles[0]
+  );
 }
 
-function getNavItems(lang, pendingCount) {
+function getWorkspaceTabs(lang, pendingCount) {
   return [
     {
       id: 'plan',
-      label: tUI(lang, 'navPlan'),
-      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`
+      label: lang === 'en' ? 'Dashboard' : tUI(lang, 'navPlan'),
+      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>`
     },
     {
       id: 'checklist',
-      label: tUI(lang, 'navChecklist'),
+      label: lang === 'en' ? 'Schedule' : tUI(lang, 'navChecklist'),
       badge: pendingCount > 0 ? pendingCount : null,
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="m9 14 2 2 4-4"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>`
     },
     {
       id: 'analyzer',
-      label: tUI(lang, 'navAnalyzer'),
+      label: lang === 'en' ? 'Lab Analyser' : tUI(lang, 'navAnalyzer'),
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>`
     },
     {
       id: 'stats',
-      label: tUI(lang, 'navStats'),
+      label: lang === 'en' ? 'Data & Gap' : tUI(lang, 'navStats'),
       svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8" rx="1"/><rect x="12" y="6" width="3" height="12" rx="1"/><rect x="17" y="13" width="3" height="5" rx="1"/></svg>`
-    },
-    {
-      id: 'profiles',
-      label: tUI(lang, 'navProfiles'),
-      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
     }
   ];
 }
@@ -130,112 +154,178 @@ function syncFontAndLangAttributes() {
   applyLanguagePreference(state.prefs.lang || 'en');
 }
 
-function renderHeaderAndNav() {
+function renderChrome() {
+  const demoSlot = document.getElementById('demo-banner-slot');
   const header = document.getElementById('app-header');
   const safety = document.getElementById('safety-strip');
   const bottomNav = document.getElementById('bottom-nav');
 
-  const profile = getActiveProfile();
-  const plan = buildPersonalizedPlan(profile);
-  const pendingCount = plan.tests.filter(
-    (t) => !(profile.completedTests && profile.completedTests[t.id])
-  ).length;
-
   const lang = state.prefs.lang || 'en';
   const langObj = INDIAN_LANGUAGES.find((l) => l.code === lang) || INDIAN_LANGUAGES[0];
-  const navItems = getNavItems(lang, pendingCount);
 
-  const desktopNavHtml = navItems
-    .map(
-      (it) => `
-      <button type="button" class="desktop-nav-btn ${state.activeTab === it.id ? 'active' : ''}" data-action="go-tab" data-tab="${it.id}">
-        ${it.svg}
-        <span>${escapeHtml(it.label)}</span>
-        ${it.badge ? `<span class="desktop-nav-badge">${it.badge}</span>` : ''}
-      </button>
-    `
-    )
-    .join('');
-
-  const profileChips = state.vault.profiles
-    .map((p) => {
-      const phaseObj = LIFE_PHASES.find((lp) => lp.id === p.phase) || LIFE_PHASES[1];
-      const active = p.id === profile.id;
-      return `
-        <button type="button" class="profile-chip ${active ? 'active' : ''}" data-action="select-profile" data-profile-id="${p.id}">
-          <span>${phaseObj.icon}</span>
-          <span>${escapeHtml(p.name)} (${escapeHtml(p.age)})</span>
-        </button>
-      `;
-    })
-    .join('');
-
-  header.innerHTML = `
-    <div class="container header-inner">
-      <div class="header-top-row">
-        <div class="brand-cluster">
-          <div class="brand-logo" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 3c-3 4-7 6.5-7 11a7 7 0 0 0 14 0c0-4.5-4-7-7-11z"/>
-              <path d="M12 8c-1.5 2.2-3.5 3.6-3.5 6a3.5 3.5 0 0 0 7 0c0-2.4-2-3.8-3.5-6z"/>
-            </svg>
+  // Demo Banner (Shown ONLY in Demo Mode!)
+  if (state.mode === 'dashboard' && state.vault && state.vault.isDemo) {
+    const profile = getActiveProfile();
+    demoSlot.hidden = false;
+    demoSlot.innerHTML = `
+      <div class="demo-banner-wrap">
+        <div class="container demo-banner-inner">
+          <div class="demo-switch-group">
+            <span>✨ <strong>Demo Preview:</strong></span>
+            ${state.vault.profiles
+              .map(
+                (p) => `
+                <button type="button" class="demo-person-chip ${p.id === profile.id ? 'active' : ''}" data-action="select-profile" data-profile-id="${p.id}">
+                  ${escapeHtml(p.name)} (${p.age})
+                </button>
+              `
+              )
+              .join('')}
           </div>
-          <div style="min-width:0;">
-            <div class="brand-title">SwasthSakhi</div>
-            <div class="brand-sub">${escapeHtml(tUI(lang, 'appTagline'))}</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" class="demo-person-chip active" data-action="start-onboarding">
+              Build Your Own Plan →
+            </button>
+            <button type="button" class="demo-person-chip" data-action="go-landing">
+              Exit Demo
+            </button>
           </div>
         </div>
+      </div>
+    `;
+  } else {
+    demoSlot.hidden = true;
+    demoSlot.innerHTML = '';
+  }
 
-        <nav class="desktop-nav" aria-label="Primary Navigation">
-          ${desktopNavHtml}
+  // Header adapts cleanly between Landing/Onboarding vs Active Dashboard
+  if (state.mode !== 'dashboard' || !state.vault) {
+    const savedCount = listSavedVaultSummaries().length;
+    header.innerHTML = `
+      <div class="container header-row">
+        <button type="button" class="brand-btn" data-action="go-landing">
+          <div class="brand-logo" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3c-3 4-7 6.5-7 11a7 7 0 0 0 14 0c0-4.5-4-7-7-11z"/></svg>
+          </div>
+          <div>
+            <span class="brand-title">SwasthSakhi</span>
+            <span class="brand-tag">${escapeHtml(tUI(lang, 'appTagline'))}</span>
+          </div>
+        </button>
+
+        <div class="header-actions">
+          <button type="button" class="header-pill ${state.prefs.largeText ? 'active-toggle' : ''}" data-action="toggle-large-text" title="Larger text">
+            A+
+          </button>
+          <button type="button" class="header-pill" data-action="open-lang-sheet">
+            🌐 ${escapeHtml(langObj.native)}
+          </button>
+          <button type="button" class="header-pill" data-action="open-signin-sheet">
+            🔑 ${savedCount > 0 ? 'My Saved Plan' : 'Sign In'}
+          </button>
+          ${
+            state.mode === 'landing'
+              ? `<button type="button" class="btn btn-primary btn-sm" data-action="start-onboarding">Build Plan →</button>`
+              : ''
+          }
+        </div>
+      </div>
+    `;
+    bottomNav.hidden = true;
+    bottomNav.innerHTML = '';
+  } else {
+    const profile = getActiveProfile();
+    const plan = buildPersonalizedPlan(profile);
+    const pendingCount = plan.tests.filter(
+      (t) => !(profile.completedTests && profile.completedTests[t.id])
+    ).length;
+    const phaseObj = LIFE_PHASES.find((lp) => lp.id === profile.phase) || LIFE_PHASES[1];
+    const tabs = getWorkspaceTabs(lang, pendingCount);
+
+    header.innerHTML = `
+      <div class="container header-row">
+        <button type="button" class="brand-btn" data-action="go-landing" title="Back to Home Story">
+          <div class="brand-logo" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3c-3 4-7 6.5-7 11a7 7 0 0 0 14 0c0-4.5-4-7-7-11z"/></svg>
+          </div>
+          <div>
+            <span class="brand-title">SwasthSakhi</span>
+            <span class="brand-tag">${state.vault.isDemo ? 'Demo Workspace' : 'Personal Health Plan'}</span>
+          </div>
+        </button>
+
+        <nav class="desktop-nav" aria-label="Workspace Views">
+          ${tabs
+            .map(
+              (it) => `
+              <button type="button" class="desktop-nav-btn ${state.activeTab === it.id ? 'active' : ''}" data-action="go-tab" data-tab="${it.id}">
+                ${it.svg}
+                <span>${escapeHtml(it.label)}</span>
+                ${it.badge ? `<span class="nav-count-pill">${it.badge}</span>` : ''}
+              </button>
+            `
+            )
+            .join('')}
         </nav>
 
         <div class="header-actions">
-          <button type="button" class="pill-action ${state.prefs.largeText ? 'active-toggle' : ''}" data-action="toggle-large-text" title="Elder-friendly larger text">
+          <button type="button" class="header-pill profile-trigger-pill" data-action="open-account-sheet">
+            <span>${phaseObj.icon}</span>
+            <span>${escapeHtml(profile.name)}</span>
+            <span style="opacity:0.65;">▾</span>
+          </button>
+          <button type="button" class="header-pill ${state.prefs.largeText ? 'active-toggle' : ''}" data-action="toggle-large-text" title="Larger text">
             A+
           </button>
-          <button type="button" class="pill-action" data-action="open-lang-sheet" title="Translate into 22 Indian languages">
+          <button type="button" class="header-pill" data-action="open-lang-sheet">
             🌐 ${escapeHtml(langObj.native)}
           </button>
         </div>
       </div>
+    `;
 
-      <div class="header-sub-row">
-        <div class="profile-switcher-bar" role="tablist" aria-label="Switch Family Profile">
-          <span class="profile-bar-label">Viewing Plan For:</span>
-          ${profileChips}
-          <button type="button" class="profile-chip profile-chip-add" data-action="add-new-profile">
-            + Add Mom / Family
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
+    bottomNav.hidden = false;
+    bottomNav.innerHTML = tabs
+      .map(
+        (it) => `
+        <button type="button" class="nav-item ${state.activeTab === it.id ? 'active' : ''}" data-action="go-tab" data-tab="${it.id}">
+          ${it.badge ? `<span class="nav-badge">${it.badge}</span>` : ''}
+          ${it.svg}
+          <span>${escapeHtml(it.label)}</span>
+        </button>
+      `
+      )
+      .join('');
+  }
 
   safety.innerHTML = `
-    <span>🛡️ <strong>Non-Medical Wellness Guide:</strong> ${escapeHtml(tUI(lang, 'safetyNotice'))}</span>
-    <button type="button" style="background:none;border:none;color:#9d174d;font-weight:800;font-size:0.74rem;cursor:pointer;flex-shrink:0;" data-action="open-disclaimer-sheet">Privacy &amp; Info</button>
+    <span>🛡️ ${escapeHtml(tUI(lang, 'safetyNotice'))}</span>
+    <button type="button" style="background:none;border:none;color:var(--plum-800);font-weight:750;font-size:0.73rem;cursor:pointer;flex-shrink:0;" data-action="open-disclaimer-sheet">Privacy &amp; Disclaimer</button>
   `;
-
-  bottomNav.innerHTML = navItems
-    .map(
-      (it) => `
-      <button type="button" class="nav-item ${state.activeTab === it.id ? 'active' : ''}" data-action="go-tab" data-tab="${it.id}">
-        ${it.badge ? `<span class="nav-badge">${it.badge}</span>` : ''}
-        ${it.svg}
-        <span>${escapeHtml(it.label)}</span>
-      </button>
-    `
-    )
-    .join('');
 }
 
 function renderViewport() {
   const viewport = document.getElementById('app-viewport');
+
+  if (state.mode === 'landing') {
+    viewport.innerHTML = renderLandingPageView();
+    return;
+  }
+
+  if (state.mode === 'onboarding') {
+    viewport.innerHTML = renderOnboardingWizardView(state.wizard);
+    return;
+  }
+
   const profile = getActiveProfile();
+  if (!profile) {
+    state.mode = 'landing';
+    viewport.innerHTML = renderLandingPageView();
+    return;
+  }
 
   if (state.activeTab === 'plan') {
-    viewport.innerHTML = renderCarePlanView(profile, state);
+    viewport.innerHTML = renderCareDashboardView(profile, state);
   } else if (state.activeTab === 'checklist') {
     viewport.innerHTML = renderChecklistTimelineView(profile, state);
   } else if (state.activeTab === 'analyzer') {
@@ -246,13 +336,11 @@ function renderViewport() {
     viewport.innerHTML = renderLabAnalyzerView(profile, state.draftLabValues, state);
   } else if (state.activeTab === 'stats') {
     viewport.innerHTML = renderStatsAwarenessView();
-  } else if (state.activeTab === 'profiles') {
-    viewport.innerHTML = renderFamilyAndVaultView(state.vault, listSavedVaultSummaries());
   }
 }
 
 function renderAll(scrollTop = false) {
-  renderHeaderAndNav();
+  renderChrome();
   renderViewport();
   if (scrollTop) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -266,11 +354,10 @@ function openLanguageSheet() {
   const current = state.prefs.lang || 'en';
   openSheet(`
     <div>
-      <div class="sheet-handle"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div>
           <div class="eyebrow">All 22 Scheduled Indian Languages</div>
-          <h2 class="h2">Choose Your Language / अपनी भाषा चुनें</h2>
+          <h2 class="h2">Choose Language / अपनी भाषा चुनें</h2>
         </div>
         <button type="button" class="btn btn-outline btn-sm" data-action="close-sheet">✕</button>
       </div>
@@ -295,41 +382,40 @@ function openTestDetailSheet(testId) {
   const t = TESTS_MASTER[testId];
   if (!t) return;
   const profile = getActiveProfile();
-  const isDone = Boolean(profile.completedTests && profile.completedTests[t.id]);
+  const isDone = Boolean(profile && profile.completedTests && profile.completedTests[t.id]);
   const tier = ACCESS_TIERS_META[t.accessTier];
 
   openSheet(`
-    <div class="stack" style="gap:12px;">
-      <div class="sheet-handle"></div>
+    <div class="stack" style="gap:14px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <div>
           <span class="badge ${tier.badgeClass}">${tier.label}</span>
           <h2 class="h2" style="margin-top:6px;">${escapeHtml(t.name)}</h2>
-          <div class="test-local-name">${escapeHtml(t.hindiHint)}</div>
+          <div class="body-xs" style="color:var(--plum-700);font-weight:700;margin-top:2px;">${escapeHtml(t.hindiHint)}</div>
         </div>
         <button type="button" class="btn btn-outline btn-sm" data-action="close-sheet">✕</button>
       </div>
 
       <div class="badge-row">
-        <span class="badge badge-rose">Estimated India Cost: ${escapeHtml(t.inrRange)}</span>
-        <span class="badge badge-clinic">Cadence: ${escapeHtml(t.frequency)}</span>
+        <span class="badge badge-rose">India Cost: ${escapeHtml(t.inrRange)}</span>
+        <span class="badge badge-clinic">${escapeHtml(t.frequency)}</span>
       </div>
 
-      <div class="card" style="background:var(--teal-50);border-color:#99f6e4;">
-        <div class="h3" style="color:#134e4a;">📍 Where &amp; How to Get It Done in India</div>
+      <div style="background:var(--teal-50);border:1px solid #99f6e4;border-radius:14px;padding:14px;">
+        <div class="h3" style="color:#134e4a;">📍 Where &amp; How in India</div>
         <p class="body-sm" style="color:#115e59;margin-top:4px;">${escapeHtml(t.whereInIndia)}</p>
       </div>
 
-      <div class="card">
-        <div class="h3">💡 Why This Check Matters</div>
+      <div style="background:var(--bg-canvas);border-radius:14px;padding:14px;">
+        <div class="h3">💡 Why It Matters</div>
         <p class="body-sm" style="margin-top:4px;">${escapeHtml(t.whyItMatters)}</p>
-        <div style="margin-top:9px;padding-top:9px;border-top:1px dashed var(--border-soft);font-size:0.79rem;color:var(--text-secondary);">
-          <strong>⏰ Preparation Tip:</strong> ${escapeHtml(t.prepNote)}
+        <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border-strong);font-size:0.8rem;color:var(--text-secondary);">
+          <strong>⏰ Preparation:</strong> ${escapeHtml(t.prepNote)}
         </div>
       </div>
 
       <button type="button" class="btn btn-primary btn-block" data-action="toggle-test-done-sheet" data-test-id="${t.id}">
-        ${isDone ? '✓ Completed (Click to Unmark)' : '☑️ Mark Check as Completed'}
+        ${isDone ? '✓ Marked Completed (Click to Undo)' : '☑️ Mark Check as Completed'}
       </button>
     </div>
   `);
@@ -337,6 +423,7 @@ function openTestDetailSheet(testId) {
 
 function openDoctorPrepSheet() {
   const profile = getActiveProfile();
+  if (!profile) return;
   const plan = buildPersonalizedPlan(profile);
   const latestRep = (profile.labReports || [])[0];
   const analysis = latestRep ? analyzeReportValues(latestRep.values, profile.phase) : { doctorQuestions: [] };
@@ -346,9 +433,9 @@ function openDoctorPrepSheet() {
     `🌸 SwasthSakhi Clinic Visit Summary — ${profile.name} (Age ${profile.age}, ${plan.phase.label})`,
     plan.activeConditions.length
       ? `History: ${plan.activeConditions.map((c) => c.label).join(', ')}`
-      : 'History: Routine preventive check',
+      : 'History: Routine preventive screening',
     pending.length
-      ? `\nUpcoming Checks to Review (${pending.length}):\n` + pending.slice(0, 6).map((t) => `• ${t.name}`).join('\n')
+      ? `\nUpcoming Screenings (${pending.length}):\n` + pending.slice(0, 6).map((t) => `• ${t.name}`).join('\n')
       : '\nAll scheduled annual screenings marked complete!',
     analysis.doctorQuestions.length
       ? `\nQuestions for Doctor:\n` + analysis.doctorQuestions.map((q) => `• ${q}`).join('\n')
@@ -359,13 +446,12 @@ function openDoctorPrepSheet() {
 
   openSheet(`
     <div class="stack" style="gap:12px;">
-      <div class="sheet-handle"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <h2 class="h2">👩‍⚕️ Doctor Visit Summary Sheet</h2>
         <button type="button" class="btn btn-outline btn-sm" data-action="close-sheet">✕</button>
       </div>
-      <p class="body-xs">Show or print this summary for your Gynecologist / Physician, or share it on WhatsApp before the appointment:</p>
-      <pre style="white-space:pre-wrap;background:#fff;padding:14px;border-radius:12px;border:1px solid var(--border-strong);font-family:inherit;font-size:0.8rem;color:var(--text-main);">${escapeHtml(summaryText)}</pre>
+      <p class="body-xs">Show this summary at your appointment or share it on WhatsApp beforehand:</p>
+      <pre style="white-space:pre-wrap;background:var(--bg-canvas);padding:14px;border-radius:12px;border:1px solid var(--border-soft);font-family:inherit;font-size:0.8rem;color:var(--text-main);">${escapeHtml(summaryText)}</pre>
       <div style="display:flex;gap:8px;">
         <button type="button" class="btn btn-whatsapp" style="flex:1;" id="share-doc-summary-btn">📲 Send on WhatsApp</button>
         <button type="button" class="btn btn-outline" id="copy-doc-summary-btn">📋 Copy</button>
@@ -380,19 +466,15 @@ function openDoctorPrepSheet() {
 function openDisclaimerSheet() {
   openSheet(`
     <div class="stack" style="gap:12px;">
-      <div class="sheet-handle"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h2 class="h2">🛡️ Non-Medical Wellness Disclaimer &amp; Privacy</h2>
+        <h2 class="h2">🛡️ Non-Medical Disclaimer &amp; Privacy</h2>
         <button type="button" class="btn btn-outline btn-sm" data-action="close-sheet">✕</button>
       </div>
       <p class="body-sm">
-        <strong>1. Not Medical Advice:</strong> SwasthSakhi is an educational preventive health organizer and report-literacy companion informed by public FOGSI, ICMR, NP-NCD, WHO, and Indian Menopause Society awareness guidelines. It does <strong>not</strong> provide medical diagnosis, prescribe medicines/dosages, or replace a qualified Gynecologist or Physician.
+        <strong>Not Medical Advice:</strong> SwasthSakhi is an educational preventive health organizer and report-literacy companion informed by FOGSI, ICMR, NP-NCD, WHO, and Indian Menopause Society guidelines. It does <strong>not</strong> diagnose conditions, prescribe medicines, or replace a qualified Gynecologist or Physician.
       </p>
       <p class="body-sm">
-        <strong>2. Urgent Symptoms:</strong> Never delay an in-person doctor visit because of a normal blood test. Symptoms like post-menopausal spotting, breast lumps, severe pregnancy headaches/bleeding, or chest/jaw discomfort always require prompt medical evaluation.
-      </p>
-      <p class="body-sm">
-        <strong>3. 100% On-Device Privacy:</strong> Your family profiles, menstrual/menopause phases, and lab values are stored locally in your browser (<code>localStorage</code>) and never uploaded to any external database.
+        <strong>100% On-Device Privacy:</strong> Your profiles and test numbers stay locally in your browser (<code>localStorage</code>) and are never sent to external servers.
       </p>
     </div>
   `);
@@ -409,17 +491,137 @@ document.addEventListener('click', (e) => {
   const profile = getActiveProfile();
 
   switch (action) {
+    // --- Stage Transitions ---
+    case 'go-landing': {
+      closeSheet();
+      clearActiveSessionToLanding();
+      state.mode = 'landing';
+      renderAll(true);
+      break;
+    }
+    case 'enter-demo-mode': {
+      closeSheet();
+      state.vault = createDemoSessionVault();
+      state.mode = 'dashboard';
+      state.activeTab = 'plan';
+      state.dashBatchTab = 'morning_fasting_home';
+      state.draftLabValues = null;
+      renderAll(true);
+      showToast('Viewing Live Demo: Maa (56) & Ananya (31)');
+      break;
+    }
+    case 'start-onboarding': {
+      closeSheet();
+      state.wizard = {
+        step: 1,
+        relation: 'Self',
+        name: '',
+        age: 34,
+        phase: 'pre_menopausal',
+        conditions: [],
+        heightCm: '',
+        weightKg: '',
+        threeWordCode: ''
+      };
+      state.mode = 'onboarding';
+      renderAll(true);
+      break;
+    }
+    case 'open-signin-sheet': {
+      openSheet(renderSignInSheet(listSavedVaultSummaries()));
+      break;
+    }
+    case 'open-account-sheet': {
+      if (state.vault) {
+        openSheet(renderAccountAndProfilesSheet(state.vault, listSavedVaultSummaries()));
+      }
+      break;
+    }
+
+    // --- Onboarding Wizard Controls ---
+    case 'wiz-pick-relation': {
+      const rel = btn.getAttribute('data-relation') || 'Self';
+      const nameEl = document.getElementById('wiz-name');
+      const ageEl = document.getElementById('wiz-age');
+      if (nameEl) state.wizard.name = nameEl.value;
+      if (ageEl && ageEl.value) state.wizard.age = Number(ageEl.value);
+      else if (rel === 'Mother') state.wizard.age = 54;
+      else if (rel === 'Self') state.wizard.age = 34;
+      else state.wizard.age = 22;
+      state.wizard.relation = rel;
+      renderViewport();
+      break;
+    }
+    case 'wiz-cancel': {
+      state.mode = 'landing';
+      renderAll(true);
+      break;
+    }
+    case 'wiz-next-1': {
+      const nameVal = document.getElementById('wiz-name')?.value.trim() || '';
+      const ageVal = Number(document.getElementById('wiz-age')?.value) || 34;
+      state.wizard.name = nameVal || (state.wizard.relation === 'Mother' ? 'Maa' : 'My Plan');
+      state.wizard.age = Math.max(12, Math.min(105, ageVal));
+      state.wizard.phase = suggestPhaseForAge(state.wizard.age, state.wizard.relation);
+      state.wizard.step = 2;
+      renderAll(true);
+      break;
+    }
+    case 'wiz-pick-phase': {
+      state.wizard.phase = btn.getAttribute('data-phase') || 'pre_menopausal';
+      renderViewport();
+      break;
+    }
+    case 'wiz-prev': {
+      state.wizard.step = Number(btn.getAttribute('data-target')) || 1;
+      renderAll(true);
+      break;
+    }
+    case 'wiz-next-2': {
+      state.wizard.step = 3;
+      renderAll(true);
+      break;
+    }
+    case 'wiz-toggle-cond': {
+      const cid = btn.getAttribute('data-cond-id');
+      const set = new Set(state.wizard.conditions || []);
+      if (set.has(cid)) set.delete(cid);
+      else set.add(cid);
+      state.wizard.conditions = Array.from(set);
+      btn.classList.toggle('selected');
+      break;
+    }
+    case 'wiz-roll-key': {
+      const inp = document.getElementById('wiz-sakhi-key');
+      const key = generateThreeWordKey();
+      state.wizard.threeWordCode = key;
+      if (inp) inp.value = key;
+      break;
+    }
+
+    // --- Dashboard & Workspace Controls ---
     case 'go-tab': {
       state.activeTab = btn.getAttribute('data-tab') || 'plan';
       renderAll(true);
+      break;
+    }
+    case 'set-dash-batch': {
+      state.dashBatchTab = btn.getAttribute('data-batch') || 'all';
+      renderViewport();
+      break;
+    }
+    case 'toggle-rf-item': {
+      const idx = Number(btn.getAttribute('data-rf-idx'));
+      state.openRedFlagIdx = state.openRedFlagIdx === idx ? -1 : idx;
+      renderViewport();
       break;
     }
     case 'toggle-large-text': {
       state.prefs.largeText = !state.prefs.largeText;
       saveUIPrefs(state.prefs);
       syncFontAndLangAttributes();
-      renderHeaderAndNav();
-      showToast(state.prefs.largeText ? 'Larger Elder-Friendly Text ON' : 'Standard Text Size');
+      renderChrome();
+      showToast(state.prefs.largeText ? 'Larger Text ON' : 'Standard Text Size');
       break;
     }
     case 'open-lang-sheet': {
@@ -447,29 +649,16 @@ document.addEventListener('click', (e) => {
     }
     case 'select-profile': {
       const pid = btn.getAttribute('data-profile-id');
-      if (pid && state.vault.profiles.some((p) => p.id === pid)) {
+      if (state.vault && pid && state.vault.profiles.some((p) => p.id === pid)) {
         state.vault.activeProfileId = pid;
         state.draftLabValues = null;
         state.loadedReportId = null;
+        state.dashBatchTab = 'morning_fasting_home';
         saveVault(state.vault);
+        closeSheet();
         renderAll(true);
-        const switched = getActiveProfile();
-        showToast(`Switched to ${switched.name}`);
+        showToast(`Viewing ${getActiveProfile().name}`);
       }
-      break;
-    }
-    case 'quick-phase': {
-      const ph = btn.getAttribute('data-phase');
-      if (ph) {
-        profile.phase = ph;
-        saveVault(state.vault);
-        renderAll(false);
-      }
-      break;
-    }
-    case 'toggle-redflags': {
-      state.redFlagsCollapsed = !state.redFlagsCollapsed;
-      renderViewport();
       break;
     }
     case 'open-test-detail': {
@@ -478,6 +667,7 @@ document.addEventListener('click', (e) => {
     }
     case 'toggle-test-done':
     case 'toggle-test-done-sheet': {
+      if (!profile) break;
       const tid = btn.getAttribute('data-test-id');
       if (!tid) break;
       if (!profile.completedTests) profile.completedTests = {};
@@ -486,17 +676,11 @@ document.addEventListener('click', (e) => {
         showToast('Marked as pending');
       } else {
         profile.completedTests[tid] = new Date().toISOString().slice(0, 10);
-        showToast('✓ Marked complete for this year!');
+        showToast('✓ Marked complete!');
       }
       saveVault(state.vault);
       if (action === 'toggle-test-done-sheet') closeSheet();
       renderAll(false);
-      break;
-    }
-    case 'expand-test': {
-      const tid = btn.getAttribute('data-test-id');
-      state.expandedTestId = state.expandedTestId === tid ? null : tid;
-      renderViewport();
       break;
     }
     case 'set-checklist-filter': {
@@ -505,7 +689,7 @@ document.addEventListener('click', (e) => {
       break;
     }
     case 'set-checklist-mode': {
-      state.checklistMode = btn.getAttribute('data-mode') || 'checklist';
+      state.checklistMode = btn.getAttribute('data-mode') || 'timeline';
       renderViewport();
       break;
     }
@@ -514,13 +698,13 @@ document.addEventListener('click', (e) => {
       break;
     }
     case 'open-edit-profile': {
-      openSheet(renderProfileEditorSheet(profile, false));
+      if (profile) openSheet(renderProfileEditorSheet(profile, false));
       break;
     }
     case 'edit-specific-profile': {
       const pid = btn.getAttribute('data-profile-id');
-      const target = state.vault.profiles.find((p) => p.id === pid) || profile;
-      openSheet(renderProfileEditorSheet(target, false));
+      const target = state.vault?.profiles.find((p) => p.id === pid) || profile;
+      if (target) openSheet(renderProfileEditorSheet(target, false));
       break;
     }
     case 'add-new-profile': {
@@ -528,9 +712,9 @@ document.addEventListener('click', (e) => {
         id: 'prof_' + Date.now(),
         name: '',
         relation: 'Mother',
-        age: 52,
-        heightCm: 156,
-        weightKg: 62,
+        age: 54,
+        heightCm: '',
+        weightKg: '',
         phase: 'post_menopause',
         conditions: [],
         completedTests: {},
@@ -545,7 +729,7 @@ document.addEventListener('click', (e) => {
     }
     case 'delete-profile': {
       const pid = btn.getAttribute('data-profile-id');
-      if (state.vault.profiles.length <= 1) {
+      if (!state.vault || state.vault.profiles.length <= 1) {
         showToast('Keep at least one profile active');
         break;
       }
@@ -559,6 +743,7 @@ document.addEventListener('click', (e) => {
       break;
     }
     case 'share-care-plan': {
+      if (!profile) break;
       const plan = buildPersonalizedPlan(profile);
       const homeList = plan.batches.morning_fasting_home.map((t) => `  • ${t.name}`).join('\n');
       const clinicList = [
@@ -572,7 +757,7 @@ document.addEventListener('click', (e) => {
         `Est. Bundled India Cost: ${plan.estimatedBundledInr}\n\n` +
         (homeList ? `🏠 *Morning Home Blood Draw (No GP Needed):*\n${homeList}\n\n` : '') +
         (clinicList ? `🏥 *Clinic & Imaging Checks:*\n${clinicList}\n\n` : '') +
-        `Prepared privately on *SwasthSakhi* (Educational guide — consult your Gynecologist).`;
+        `Created privately on *SwasthSakhi*.`;
       shareOrCopyText(msg, 'Care plan copied!');
       break;
     }
@@ -599,10 +784,11 @@ document.addEventListener('click', (e) => {
       }
       state.draftLabValues = { ...(state.draftLabValues || {}), ...parsed };
       renderViewport();
-      showToast(`✨ Extracted ${count} biomarkers into analyser!`);
+      showToast(`✨ Extracted ${count} biomarkers!`);
       break;
     }
     case 'save-lab-report': {
+      if (!profile) break;
       const cleanVals = {};
       for (const [k, v] of Object.entries(state.draftLabValues || {})) {
         if (v !== '' && v !== null && v !== undefined && !Number.isNaN(Number(v))) {
@@ -625,10 +811,11 @@ document.addEventListener('click', (e) => {
       state.loadedReportId = newRep.id;
       saveVault(state.vault);
       renderViewport();
-      showToast('💾 Saved to ' + profile.name + '’s timeline!');
+      showToast('💾 Report saved!');
       break;
     }
     case 'load-saved-report': {
+      if (!profile) break;
       const rid = btn.getAttribute('data-report-id');
       const found = (profile.labReports || []).find((r) => r.id === rid);
       if (found) {
@@ -640,6 +827,7 @@ document.addEventListener('click', (e) => {
       break;
     }
     case 'share-doctor-questions': {
+      if (!profile) break;
       const analysis = analyzeReportValues(state.draftLabValues || {}, profile.phase);
       const txt =
         `👩‍⚕️ *Questions for Doctor (${profile.name}, Age ${profile.age})*\n\n` +
@@ -664,20 +852,22 @@ document.addEventListener('click', (e) => {
       if (inp) inp.value = generateThreeWordKey();
       break;
     }
-    case 'copy-sakhi-key': {
-      copyPlainText(state.vault.vaultCode, '3-Word Sakhi Key copied!');
-      break;
-    }
-    case 'quick-switch-vault': {
+    case 'quick-open-saved': {
       const code = btn.getAttribute('data-code');
-      const res = registerOrSwitchVault({ threeWordCode: code });
-      state.vault = res.vault;
-      state.draftLabValues = null;
-      renderAll(true);
-      showToast(`Switched vault: ${state.vault.isGuest ? 'Login-Free' : state.vault.vaultCode}`);
+      const opened = signInExistingVault({ threeWordCode: code });
+      if (opened) {
+        state.vault = opened;
+        state.mode = 'dashboard';
+        state.activeTab = 'plan';
+        state.draftLabValues = null;
+        closeSheet();
+        renderAll(true);
+        showToast('Opened saved health plan');
+      }
       break;
     }
     case 'export-vault-json': {
+      if (!state.vault) break;
       const blob = new Blob([JSON.stringify(state.vault, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -685,7 +875,7 @@ document.addEventListener('click', (e) => {
       a.download = `swasthsakhi-${state.vault.vaultCode}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast('Downloaded private backup JSON');
+      showToast('Downloaded backup file');
       break;
     }
   }
@@ -708,8 +898,51 @@ document.addEventListener('input', (e) => {
 });
 
 document.addEventListener('submit', (e) => {
-  if (e.target.id === 'profile-editor-form') {
+  if (e.target.id === 'wiz-finish-form') {
     e.preventDefault();
+    const heightCm = Number(document.getElementById('wiz-height')?.value) || null;
+    const weightKg = Number(document.getElementById('wiz-weight')?.value) || null;
+    const threeWordCode = document.getElementById('wiz-sakhi-key')?.value.trim() || '';
+
+    const newProfile = {
+      id: 'prof_' + Date.now(),
+      name: state.wizard.name || 'My Plan',
+      relation: state.wizard.relation || 'Self',
+      age: Number(state.wizard.age) || 34,
+      phase: state.wizard.phase || 'pre_menopausal',
+      heightCm,
+      weightKg,
+      conditions: state.wizard.conditions || [],
+      completedTests: {},
+      labReports: []
+    };
+
+    state.vault = createPersonalVaultFromOnboarding(newProfile, { threeWordCode });
+    state.mode = 'dashboard';
+    state.activeTab = 'plan';
+    state.dashBatchTab = 'morning_fasting_home';
+    state.draftLabValues = null;
+    renderAll(true);
+    showToast(`✨ Built ${newProfile.name}’s Health Care Dashboard!`);
+  } else if (e.target.id === 'signin-existing-form') {
+    e.preventDefault();
+    const code = document.getElementById('signin-code')?.value || '';
+    const alias = document.getElementById('signin-alias')?.value || '';
+    const found = signInExistingVault({ threeWordCode: code, contactAlias: alias });
+    if (found) {
+      state.vault = found;
+      state.mode = 'dashboard';
+      state.activeTab = 'plan';
+      state.draftLabValues = null;
+      closeSheet();
+      renderAll(true);
+      showToast('Welcome back!');
+    } else {
+      showToast('No matching saved plan on this device — try Restore File or Build Plan');
+    }
+  } else if (e.target.id === 'profile-editor-form') {
+    e.preventDefault();
+    if (!state.vault) return;
     const form = e.target;
     const pid = form.getAttribute('data-profile-id');
     const isNew = form.getAttribute('data-is-new') === '1';
@@ -749,23 +982,24 @@ document.addEventListener('submit', (e) => {
     closeSheet();
     state.activeTab = 'plan';
     renderAll(true);
-    showToast(`Saved ${updated.name}’s Care Plan!`);
+    showToast(`Updated ${updated.name}’s Dashboard`);
   } else if (e.target.id === 'sakhi-login-form') {
     e.preventDefault();
+    if (!state.vault) return;
     const words = document.getElementById('sakhi-three-words')?.value || '';
     const alias = document.getElementById('sakhi-contact-alias')?.value || '';
-    const { vault, mode } = registerOrSwitchVault({
+    const { vault, mode } = upgradeVaultWithSakhiKey(state.vault, {
       threeWordCode: words,
-      contactAlias: alias,
-      keepCurrentProfiles: true
+      contactAlias: alias
     });
     state.vault = vault;
     state.draftLabValues = null;
+    closeSheet();
     renderAll(false);
     showToast(
-      mode === 'restored'
-        ? `🔑 Signed in to ${vault.vaultCode}`
-        : `✨ Created 3-Word Key: ${vault.vaultCode}`
+      mode === 'switched'
+        ? `🔑 Switched to ${vault.vaultCode}`
+        : `🔑 Saved with 3-Word Key: ${vault.vaultCode}`
     );
   }
 });
@@ -778,12 +1012,15 @@ document.addEventListener('change', (e) => {
         const imported = JSON.parse(String(reader.result));
         if (imported && Array.isArray(imported.profiles) && imported.profiles.length) {
           imported.vaultCode = imported.vaultCode || generateThreeWordKey();
-          imported.isGuest = false;
+          imported.isDemo = false;
           saveVault(imported);
           state.vault = imported;
+          state.mode = 'dashboard';
+          state.activeTab = 'plan';
           state.draftLabValues = null;
+          closeSheet();
           renderAll(true);
-          showToast('Restored family profiles from backup!');
+          showToast('Restored health plan from backup!');
         } else {
           showToast('Invalid backup file format');
         }

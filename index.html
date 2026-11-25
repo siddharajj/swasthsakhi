@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#9D174D" />
+  <meta name="theme-color" content="#7A163E" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="SwasthSakhi" />
-  <title>SwasthSakhi • Women's Health Screening, Care Plan &amp; Awareness (India)</title>
-  <meta name="description" content="Personalised life-stage health check &amp; screening plan for women in India, from teenage to post-menopause, with lab access tiers, non-medical report literacy analyser, and NFHS-5 awareness stats." />
+  <title>SwasthSakhi • Women's Preventive Health &amp; Screening Plan (India)</title>
+  <meta name="description" content="Closing India's women's health screening gap — personalised life-stage screening dashboard, lab access guide, and non-medical report literacy analyser." />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
@@ -34,32 +34,35 @@
   <div id="google_translate_element" class="sr-only-translate" aria-hidden="true"></div>
 
   <div class="app-shell">
-    <!-- Responsive Sticky Header (Desktop Top Nav + Mobile Compact Bar) -->
+    <!-- Optional Demo Mode Banner (Hidden on Landing & Personal Plans) -->
+    <div id="demo-banner-slot" hidden></div>
+
+    <!-- Clean Minimal Sticky Header -->
     <header class="app-header" id="app-header"></header>
 
-    <!-- Non-Medical Wellness Companion Safety Strip -->
+    <!-- Calm Non-Medical Notice Strip -->
     <div class="safety-strip-wrap">
       <div class="container safety-strip" id="safety-strip"></div>
     </div>
 
-    <!-- Main Responsive Workspace (Desktop Multi-Column, Tablet Fluid, Mobile Single-Column) -->
+    <!-- Main Responsive Workspace -->
     <main class="container app-viewport" id="app-viewport" tabindex="-1"></main>
 
-    <!-- Desktop / Tablet Footer -->
+    <!-- Clean Footer -->
     <footer class="site-footer">
       <div class="container footer-inner">
         <div><strong>SwasthSakhi</strong> — Personalised Women’s Preventive Health &amp; Screening Companion for India. 100% private on your device.</div>
-        <div>Educational health literacy informed by FOGSI, ICMR, NP-NCD &amp; IMS frameworks — always consult a qualified Gynecologist or Physician for medical advice.</div>
+        <div>Educational health literacy informed by FOGSI, ICMR, NP-NCD &amp; IMS frameworks — consult a qualified Gynecologist or Physician for medical advice.</div>
       </div>
     </footer>
 
-    <!-- Mobile-Only Bottom Navigation Bar (<768px) -->
-    <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile Primary Navigation"></nav>
+    <!-- Mobile Bottom Navigation (Shown ONLY when inside Dashboard on mobile screens) -->
+    <nav class="bottom-nav" id="bottom-nav" aria-label="Primary Navigation" hidden></nav>
 
-    <!-- Adaptive Modal (Centered Dialog on Desktop/Tablet, Slide-up Sheet on Phone) -->
+    <!-- Adaptive Modal / Slide-over -->
     <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
 
-    <!-- Toast Feedback -->
+    <!-- Toast -->
     <div class="toast" id="app-toast" role="status" aria-live="polite" hidden></div>
   </div>
 

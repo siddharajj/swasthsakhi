@@ -1,7 +1,7 @@
 import { LIFE_PHASES, CONDITIONS_CATALOG, TESTS_MASTER, buildPersonalizedPlan } from '../js/clinicalData.js';
 import { analyzeReportValues, parseLabReportText } from '../js/analyzerEngine.js';
 import { INDIAN_LANGUAGES, tUI } from '../js/i18n.js';
-import { generateThreeWordKey, normalizeThreeWordKey } from '../js/vault.js';
+import { generateThreeWordKey, normalizeThreeWordKey, suggestPhaseForAge, createDemoSessionVault } from '../js/vault.js';
 import { HERO_STATS, SCREENING_GAP_BARS } from '../js/statsData.js';
 
 let passed = 0;

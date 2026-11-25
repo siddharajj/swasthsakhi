@@ -1,16 +1,18 @@
-const CACHE_NAME = 'swasthsakhi-pwa-v2';
+const CACHE_NAME = 'swasthsakhi-pwa-v3';
 const ASSETS = [
   './',
   './index.html',
   './css/styles.css',
   './manifest.webmanifest',
   './icon.svg',
+  './assets/hero-women.jpg',
   './js/app.js',
   './js/clinicalData.js',
   './js/statsData.js',
   './js/analyzerEngine.js',
   './js/i18n.js',
   './js/vault.js',
+  './js/viewsLandingOnboarding.js',
   './js/viewsPlan.js',
   './js/viewsAnalyzerStats.js'
 ];
@@ -29,7 +31,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Network-first with offline cache fallback so updates appear immediately on refresh
+// Network-first with offline cache fallback
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);

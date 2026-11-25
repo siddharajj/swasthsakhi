@@ -67,7 +67,7 @@ export function renderLabAnalyzerView(profile, draftValues, uiState) {
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
                 <div>
                   <div class="h3">${escapeHtml(r.label)}</div>
-                  <div class="test-local-name">${escapeHtml(r.hindi)}</div>
+                  <div class="body-xs" style="color:var(--plum-700);font-weight:600;margin-top:1px;">${escapeHtml(r.plainMeaning)}</div>
                 </div>
                 <div style="text-align:right;flex-shrink:0;">
                   <div style="font-size:1.1rem;font-weight:900;color:var(--plum-800);">${r.value} <span style="font-size:0.72rem;font-weight:600;">${escapeHtml(r.unit)}</span></div>

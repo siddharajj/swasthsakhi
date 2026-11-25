@@ -1,4 +1,4 @@
-const CACHE_NAME = 'swasthsakhi-pwa-v6';
+const CACHE_NAME = 'swasthsakhi-pwa-v7';
 const ASSETS = [
   './',
   './index.html',

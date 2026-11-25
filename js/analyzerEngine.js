@@ -7,7 +7,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'hemoglobin',
     label: 'Hemoglobin (Hb)',
-    hindi: 'हीमोग्लोबिन (खून की मात्रा)',
+    plainMeaning: 'Oxygen-carrying red blood cell protein',
     unit: 'g/dL',
     step: '0.1',
     placeholder: 'e.g. 11.4',
@@ -45,7 +45,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'ferritin',
     label: 'Serum Ferritin (Iron Stores)',
-    hindi: 'सीरम फेरिटिन (आयरन बैंक)',
+    plainMeaning: 'Stored body iron reserve bank',
     unit: 'ng/mL',
     step: '1',
     placeholder: 'e.g. 18',
@@ -91,7 +91,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'tsh',
     label: 'TSH (Thyroid Stimulating Hormone)',
-    hindi: 'थायरॉइड (TSH)',
+    plainMeaning: 'Master thyroid signaling hormone',
     unit: 'mIU/L',
     step: '0.05',
     placeholder: 'e.g. 4.2',
@@ -138,7 +138,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'hba1c',
     label: 'HbA1c (3-Month Blood Sugar Avg)',
-    hindi: '3 माह की औसत शुगर (HbA1c)',
+    plainMeaning: '8–12 week average blood glucose',
     unit: '%',
     step: '0.1',
     placeholder: 'e.g. 5.8',
@@ -175,7 +175,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'fasting_glucose',
     label: 'Fasting Blood Glucose (FBS)',
-    hindi: 'खाली पेट शुगर',
+    plainMeaning: 'Morning blood sugar after overnight fast',
     unit: 'mg/dL',
     step: '1',
     placeholder: 'e.g. 96',
@@ -213,7 +213,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'fasting_insulin',
     label: 'Fasting Serum Insulin',
-    hindi: 'खाली पेट इंसुलिन (PCOS / मेटाबोलिक)',
+    plainMeaning: 'Baseline metabolic & PCOS insulin signal',
     unit: 'µIU/mL',
     step: '0.1',
     placeholder: 'e.g. 13.5',
@@ -241,7 +241,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'vit_d',
     label: '25-OH Vitamin D',
-    hindi: 'विटामिन डी',
+    plainMeaning: 'Calcium absorption & bone health vitamin',
     unit: 'ng/mL',
     step: '1',
     placeholder: 'e.g. 16',
@@ -287,7 +287,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'vit_b12',
     label: 'Serum Vitamin B12',
-    hindi: 'विटामिन बी-12',
+    plainMeaning: 'Nerve comfort, red blood cell & energy vitamin',
     unit: 'pg/mL',
     step: '5',
     placeholder: 'e.g. 195',
@@ -324,7 +324,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'ldl',
     label: 'LDL Cholesterol ("Bad" Cholesterol)',
-    hindi: 'एलडीएल कोलेस्ट्रॉल (हृदय स्वास्थ्य)',
+    plainMeaning: 'Artery-plaque forming cholesterol fraction',
     unit: 'mg/dL',
     step: '1',
     placeholder: 'e.g. 135',
@@ -361,7 +361,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'tvs_et_mm',
     label: 'TVS Endometrial Thickness (Uterine Lining)',
-    hindi: 'बच्चेदानी की परत की मोटाई (TVS अल्ट्रासाउंड)',
+    plainMeaning: 'Uterine inner lining measurement on ultrasound',
     unit: 'mm',
     step: '0.1',
     placeholder: 'e.g. 5.5 (from USG report)',
@@ -409,7 +409,7 @@ export const BIOMARKERS_SPEC = [
   {
     key: 'dexa_tscore',
     label: 'DEXA Bone Density T-Score (Spine / Hip)',
-    hindi: 'DEXA बोन डेंसिटी T-स्कोर',
+    plainMeaning: 'Hip & lumbar spine bone mineral density score',
     unit: 'SD',
     step: '0.1',
     placeholder: 'e.g. -1.8',

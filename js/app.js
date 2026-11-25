@@ -391,7 +391,6 @@ function openTestDetailSheet(testId) {
         <div>
           <span class="badge ${tier.badgeClass}">${tier.label}</span>
           <h2 class="h2" style="margin-top:6px;">${escapeHtml(t.name)}</h2>
-          <div class="body-xs" style="color:var(--plum-700);font-weight:700;margin-top:2px;">${escapeHtml(t.hindiHint)}</div>
         </div>
         <button type="button" class="btn btn-outline btn-sm" data-action="close-sheet">✕</button>
       </div>

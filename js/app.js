@@ -48,7 +48,7 @@ const state = {
   vault: existingUserVault || null,
   prefs: loadUIPrefs(),
   activeTab: 'plan', // 'plan' (Dashboard) | 'checklist' (Timeline) | 'analyzer' (Lab Check) | 'stats' (Awareness Data)
-  dashBatchTab: 'morning_fasting_home',
+  dashBatchTab: 'all',
   openRedFlagIdx: 0,
   checklistFilter: 'all',
   checklistMode: 'timeline',
@@ -503,7 +503,7 @@ document.addEventListener('click', (e) => {
       state.vault = createDemoSessionVault();
       state.mode = 'dashboard';
       state.activeTab = 'plan';
-      state.dashBatchTab = 'morning_fasting_home';
+      state.dashBatchTab = 'all';
       state.draftLabValues = null;
       renderAll(true);
       showToast('Viewing Live Demo: Maa (56) & Ananya (31)');
@@ -652,7 +652,7 @@ document.addEventListener('click', (e) => {
         state.vault.activeProfileId = pid;
         state.draftLabValues = null;
         state.loadedReportId = null;
-        state.dashBatchTab = 'morning_fasting_home';
+        state.dashBatchTab = 'all';
         saveVault(state.vault);
         closeSheet();
         renderAll(true);
@@ -919,7 +919,7 @@ document.addEventListener('submit', (e) => {
     state.vault = createPersonalVaultFromOnboarding(newProfile, { threeWordCode });
     state.mode = 'dashboard';
     state.activeTab = 'plan';
-    state.dashBatchTab = 'morning_fasting_home';
+    state.dashBatchTab = 'all';
     state.draftLabValues = null;
     renderAll(true);
     showToast(`✨ Built ${newProfile.name}’s Health Care Dashboard!`);

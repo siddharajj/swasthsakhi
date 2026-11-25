@@ -25,10 +25,10 @@ export function renderCareDashboardView(profile, uiState) {
   const homeCount = plan.batches.morning_fasting_home.length;
   const clinicCount = plan.batches.imaging_clinic_visit.length + plan.batches.specialist_obgyn.length;
 
-  // Active batch tab inside the main dashboard card
-  const batchTab = uiState.dashBatchTab || 'morning_fasting_home';
+  // Active batch tab inside the main dashboard card (defaults to 'all')
+  const batchTab = uiState.dashBatchTab || 'all';
   let displayedTests = plan.tests;
-  let batchDesc = 'All recommended screenings for her current life stage & health history.';
+  let batchDesc = 'Showing all recommended screenings — filter by visit type above to plan your appointments.';
   if (batchTab === 'morning_fasting_home') {
     displayedTests = plan.batches.morning_fasting_home;
     batchDesc = BATCH_GROUPS_META.morning_fasting_home.subtitle;
@@ -60,16 +60,18 @@ export function renderCareDashboardView(profile, uiState) {
             <button type="button" class="check-circle ${isDone ? 'checked' : ''}" data-action="toggle-test-done" data-test-id="${t.id}" aria-label="Toggle ${escapeHtml(t.name)}">
               ${isDone ? '✓' : ''}
             </button>
-            <div style="min-width:0;">
-              <div style="font-size:0.88rem;font-weight:700;color:${isDone ? 'var(--text-muted)' : 'var(--text-main)'};${isDone ? 'text-decoration:line-through;' : ''}">
+            <div class="clean-test-info">
+              <div class="clean-test-title ${isDone ? 'is-done' : ''}">
                 ${escapeHtml(t.name)}
               </div>
-              <div class="body-xs">${escapeHtml(t.frequency)}</div>
+              <div class="clean-test-meta">
+                <span class="badge ${tier.badgeClass}">${tier.shortBadge}</span>
+                <span class="badge badge-rose">${escapeHtml(t.inrRange)}</span>
+                <span class="body-xs">• ${escapeHtml(t.frequency)}</span>
+              </div>
             </div>
           </div>
-          <div class="clean-test-right">
-            <span class="badge ${tier.badgeClass}">${tier.shortBadge}</span>
-            <span class="body-xs" style="font-weight:700;color:var(--text-secondary);">${escapeHtml(t.inrRange)}</span>
+          <div class="clean-test-action">
             <button type="button" class="btn btn-outline btn-sm" data-action="open-test-detail" data-test-id="${t.id}">
               Details ›
             </button>
@@ -194,6 +196,9 @@ export function renderCareDashboardView(profile, uiState) {
           </div>
 
           <div class="batch-tabs" role="tablist">
+            <button type="button" class="batch-tab-btn ${batchTab === 'all' ? 'active' : ''}" data-action="set-dash-batch" data-batch="all">
+              All (${totalCount})
+            </button>
             ${
               plan.batches.morning_fasting_home.length
                 ? `<button type="button" class="batch-tab-btn ${batchTab === 'morning_fasting_home' ? 'active' : ''}" data-action="set-dash-batch" data-batch="morning_fasting_home">
@@ -215,9 +220,6 @@ export function renderCareDashboardView(profile, uiState) {
                    </button>`
                 : ''
             }
-            <button type="button" class="batch-tab-btn ${batchTab === 'all' ? 'active' : ''}" data-action="set-dash-batch" data-batch="all">
-              All (${totalCount})
-            </button>
           </div>
 
           <div class="body-xs" style="padding:10px 4px 4px;">
@@ -306,13 +308,15 @@ export function renderChecklistTimelineView(profile, uiState) {
                     <button type="button" class="check-circle ${doneDate ? 'checked' : ''}" data-action="toggle-test-done" data-test-id="${t.id}">
                       ${doneDate ? '✓' : ''}
                     </button>
-                    <div>
-                      <div style="font-size:0.87rem;font-weight:700;${doneDate ? 'text-decoration:line-through;color:var(--text-muted);' : ''}">${escapeHtml(t.name)}</div>
-                      <div class="body-xs">${escapeHtml(t.frequency)} ${doneDate ? '• Done ' + escapeHtml(doneDate) : ''}</div>
+                    <div class="clean-test-info">
+                      <div class="clean-test-title ${doneDate ? 'is-done' : ''}">${escapeHtml(t.name)}</div>
+                      <div class="clean-test-meta">
+                        <span class="badge ${tier.badgeClass}">${tier.shortBadge}</span>
+                        <span class="body-xs">• ${escapeHtml(t.frequency)} ${doneDate ? '• Done ' + escapeHtml(doneDate) : ''}</span>
+                      </div>
                     </div>
                   </div>
-                  <div class="clean-test-right">
-                    <span class="badge ${tier.badgeClass}">${tier.shortBadge}</span>
+                  <div class="clean-test-action">
                     <button type="button" class="btn btn-outline btn-sm" data-action="open-test-detail" data-test-id="${t.id}">Where &amp; Prep</button>
                   </div>
                 </div>

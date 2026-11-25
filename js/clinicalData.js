@@ -376,7 +376,7 @@ export const TESTS_MASTER = {
     batchGroup: 'morning_fasting_home',
     frequency: 'Every 12 months',
     timelineSlot: 'Month 1 • Morning Home Blood Draw',
-    inrRange: '₹700 – ₹1,200 (cheaper inside wellness combo)',
+    inrRange: '₹700 – ₹1,200',
     whereInIndia: 'Direct home phlebotomy or walk-in path lab (tip: bundled wellness packages cut Vit D + B12 cost in half).',
     whyItMatters: '70–90% of Indian women are Vitamin D deficient, preventing dietary calcium from entering bones and triggering early osteopenia.',
     prepNote: 'No special prep; bundle with morning blood panel.'
@@ -390,7 +390,7 @@ export const TESTS_MASTER = {
     batchGroup: 'morning_fasting_home',
     frequency: 'Every 12 months',
     timelineSlot: 'Month 1 • Morning Home Blood Draw',
-    inrRange: '₹600 – ₹1,000 (cheaper inside wellness combo)',
+    inrRange: '₹600 – ₹1,000',
     whereInIndia: 'Direct home phlebotomy or walk-in path lab.',
     whyItMatters: '40–70% deficiency in India (especially vegetarian diets); low B12 causes exhaustion, mouth ulcers, memory fog, and tingling hands/feet.',
     prepNote: 'Morning draw alongside annual blood panel.'
@@ -556,9 +556,9 @@ export const TESTS_MASTER = {
     category: 'cervical_gynec',
     accessTier: 'diagnostic_center',
     batchGroup: 'imaging_clinic_visit',
-    frequency: 'Pap every 3 yrs (age 21–29); HPV DNA or Co-test every 5 yrs (age 30–65)',
+    frequency: 'Pap every 3 yrs (21–29); HPV DNA every 5 yrs (30–65)',
     timelineSlot: 'Month 2 • Women’s Clinic / Self-Sample',
-    inrRange: '₹800 – ₹1,500 (Pap) • ₹1,800 – ₹2,800 (HPV DNA)',
+    inrRange: '₹800 – ₹2,800',
     whereInIndia: 'Option 1: Any Gynecologist clinic or diagnostic flagship center (Lal PathLabs/Metropolis/Apollo women’s centers) — no prior referral needed at clinic. Option 2: Private At-Home HPV DNA Self-Sampling vaginal swab kits now available in India for women hesitant about pelvic exams!',
     whyItMatters: 'Only 1.9% of Indian women are screened, yet catching pre-cancerous cervical cell changes makes cervical cancer nearly 100% preventable.',
     prepNote: 'Schedule 5+ days after your period ends; avoid vaginal creams, douching, or intercourse for 48 hours prior.'
@@ -570,9 +570,9 @@ export const TESTS_MASTER = {
     category: 'clinical_exam',
     accessTier: 'diagnostic_center',
     batchGroup: 'imaging_clinic_visit',
-    frequency: 'Clinical exam every 1–3 yrs (20s–30s), annually from 40; Self-check monthly',
+    frequency: 'CBE every 1–3 yrs (20s–30s), yearly from 40; Self-check monthly',
     timelineSlot: 'Monthly (Day 7–10 of cycle) + Annual Gynec Visit',
-    inrRange: '₹0 (Self-check) • ₹500 – ₹1,000 (Clinic consult)',
+    inrRange: '₹0 – ₹1,000',
     whereInIndia: 'Performed during any routine Gynecologist / Women’s Wellness OPD visit or government Ayushman Arogya Mandir NCD clinic.',
     whyItMatters: 'Less than 1% of women in India get clinical breast checks, leading to late-stage diagnoses. Knowing your normal baseline catches subtle changes early.',
     prepNote: 'Best done 3–5 days after period ends when hormonal breast tenderness subsides (or same date each month post-menopause).'
@@ -682,9 +682,9 @@ export const TESTS_MASTER = {
     category: 'vaccine',
     accessTier: 'rx_mandatory',
     batchGroup: 'specialist_obgyn',
-    frequency: '2 doses (ages 9–14) or 3-dose catch-up series (ages 15–26; shared decision 27–45)',
+    frequency: '2 doses (9–14 yrs) or 3-dose catch-up (15–26 yrs)',
     timelineSlot: 'One-Time Series (0, 2, 6 mos)',
-    inrRange: '₹2,000/dose (Indigenous Cervavac) • ₹3,900–₹10,800/dose (Gardasil 4/9)',
+    inrRange: '₹2,000 – ₹4,000/dose',
     whereInIndia: 'Gynecologist / Pediatrician clinic or hospital immunization wing. India’s WHO-prequalified Cervavac cut vaccine cost by ~50%.',
     whyItMatters: 'Prevents high-risk HPV strains (16 & 18) responsible for >80% of cervical cancer cases in India. (Note: Vaccinated women still continue routine Pap/HPV screening!).',
     prepNote: 'Not given during pregnancy; complete remaining doses post-delivery if pregnancy starts mid-series.'

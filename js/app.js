@@ -208,16 +208,16 @@ function renderChrome() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3c-3 4-7 6.5-7 11a7 7 0 0 0 14 0c0-4.5-4-7-7-11z"/></svg>
           </div>
           <div>
-            <span class="brand-title">SwasthSakhi</span>
+            <span class="brand-title notranslate" translate="no">SwasthSakhi</span>
             <span class="brand-tag">${escapeHtml(tUI(lang, 'appTagline'))}</span>
           </div>
         </button>
 
         <div class="header-actions">
-          <button type="button" class="header-pill ${state.prefs.largeText ? 'active-toggle' : ''}" data-action="toggle-large-text" title="Larger text">
+          <button type="button" class="header-pill notranslate ${state.prefs.largeText ? 'active-toggle' : ''}" translate="no" data-action="toggle-large-text" title="Larger text">
             A+
           </button>
-          <button type="button" class="header-pill" data-action="open-lang-sheet">
+          <button type="button" class="header-pill notranslate" translate="no" data-action="open-lang-sheet">
             🌐 <span class="lang-label-text">${escapeHtml(langObj.native)}</span>
           </button>
           <button type="button" class="header-pill" data-action="open-signin-sheet">
@@ -249,7 +249,7 @@ function renderChrome() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3c-3 4-7 6.5-7 11a7 7 0 0 0 14 0c0-4.5-4-7-7-11z"/></svg>
           </div>
           <div>
-            <span class="brand-title">SwasthSakhi</span>
+            <span class="brand-title notranslate" translate="no">SwasthSakhi</span>
             <span class="brand-tag">${state.vault.isDemo ? 'Demo Workspace' : 'Personal Health Plan'}</span>
           </div>
         </button>
@@ -274,10 +274,10 @@ function renderChrome() {
             <span class="profile-trigger-name">${escapeHtml(profile.name)}</span>
             <span style="opacity:0.65;">▾</span>
           </button>
-          <button type="button" class="header-pill ${state.prefs.largeText ? 'active-toggle' : ''}" data-action="toggle-large-text" title="Larger text">
+          <button type="button" class="header-pill notranslate ${state.prefs.largeText ? 'active-toggle' : ''}" translate="no" data-action="toggle-large-text" title="Larger text">
             A+
           </button>
-          <button type="button" class="header-pill" data-action="open-lang-sheet">
+          <button type="button" class="header-pill notranslate" translate="no" data-action="open-lang-sheet">
             🌐 <span class="lang-label-text">${escapeHtml(langObj.native)}</span>
           </button>
         </div>
@@ -353,7 +353,7 @@ function renderAll(scrollTop = false) {
 function openLanguageSheet() {
   const current = state.prefs.lang || 'en';
   openSheet(`
-    <div>
+    <div class="notranslate" translate="no">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div>
           <div class="eyebrow">All 22 Scheduled Indian Languages</div>
@@ -362,14 +362,14 @@ function openLanguageSheet() {
         <button type="button" class="btn btn-outline btn-sm" data-action="close-sheet">✕</button>
       </div>
       <p class="body-xs" style="margin-bottom:12px;">
-        Translates navigation immediately and translates health plans, test details, and awareness statistics across Indian scripts.
+        Select your preferred script below — each option always keeps its own script and English name so you can switch back anytime.
       </p>
       <div class="grid-2 grid-2-responsive" style="gap:8px;">
         ${INDIAN_LANGUAGES.map(
           (l) => `
-            <button type="button" class="SelectableChip ${current === l.code ? 'selected' : ''}" style="text-align:left;display:flex;justify-content:space-between;align-items:center;" data-action="choose-lang" data-lang="${l.code}">
+            <button type="button" class="SelectableChip notranslate ${current === l.code ? 'selected' : ''}" translate="no" style="text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px;" data-action="choose-lang" data-lang="${l.code}">
               <span style="font-size:0.86rem;font-weight:800;">${escapeHtml(l.native)}</span>
-              <span style="font-size:0.7rem;opacity:0.75;">${escapeHtml(l.english)}</span>
+              <span style="font-size:0.72rem;opacity:0.78;font-weight:600;">${escapeHtml(l.english)}</span>
             </button>
           `
         ).join('')}
